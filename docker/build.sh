@@ -2,8 +2,8 @@
 #Podman-compatible docker-based wrapper
 set -xueo pipefail
 pushd $(dirname $(realpath "$BASH_SOURCE"))
-docker build --build-arg "host_uid=$(id -u)" --build-arg "host_gid=$(id -g)"  -t oe-builder-yocto .
-env PODMAN_USERNS=keep-id docker run --init --network=private --sig-proxy --rm -ti --pids-limit=-1 --shm-size=3g \
+podman build --build-arg "host_uid=$(id -u)" --build-arg "host_gid=$(id -g)"  -t oe-builder-yocto .
+env PODMAN_USERNS=keep-id podman run --init --network=private --sig-proxy --rm -ti --pids-limit=-1 --shm-size=3g --annotation run.oci.keep_original_groups=1 \
         --env PRSERV_HOST=localhost:0 --env CACHE=/sandbox-cache --env SSTATE_DIR=/sandbox-sstate \
         --env DL_DIR=/sandbox/cache \
         --env SSTATE_DIR=/sandbox/sstate-cache \
@@ -15,6 +15,6 @@ env PODMAN_USERNS=keep-id docker run --init --network=private --sig-proxy --rm -
 set -xeo pipefail; \
 pwd; \
 cd poky && source oe-init-build-env ..; git -C downloads status 2>&1 1>/dev/null  || git -C downloads -c init.defaultBranch=dummy init ; \
-exec bash -c \"time eval ${1:-'bitbake -c cleanall trik-image-core trik-runtime-qt5;time bitbake trik-image-core -k'}\" \
+exec bash -c \"time eval ${1:-'bitbake -c cleansstate virtual/kernel u-boot-trik; bitbake -c cleanall trik-image-core trik-runtime-qt5;time bitbake trik-image-core -k'}\" \
 "
 popd
